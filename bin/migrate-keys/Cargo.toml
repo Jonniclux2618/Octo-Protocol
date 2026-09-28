@@ -8,6 +8,9 @@ license.workspace = true
 repository.workspace = true
 authors.workspace = true
 
+[lib]
+path = "src/lib.rs"
+
 [[bin]]
 name = "octo-migrate-keys"
 path = "src/main.rs"
@@ -24,3 +27,6 @@ uuid.workspace = true
 sha2.workspace = true
 hex.workspace = true
 dotenvy = "0.15"
+
+[dev-dependencies]
+sqlx.workspace = true

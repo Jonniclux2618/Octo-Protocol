@@ -25,17 +25,16 @@
 //!
 //! ## Idempotency
 //!
-//! The store method `reseal_wallet` only updates a row when its current `sealed_scheme` matches
-//! the expected "old" scheme. Re-running the tool against a fully-migrated database is safe and
-//! produces 0 updates.
+//! A row that already opens under the new key is skipped, and `reseal_wallet` only writes when
+//! the row still holds the ciphertext that was read (compare-and-swap). Re-running the tool
+//! against a fully-migrated database is safe and produces 0 updates. See `lib.rs`.
 //!
 //! ## Rollback
 //!
-//! Old-scheme and new-scheme records can coexist in the database indefinitely because every open
-//! call reads the scheme tag from the row and picks the correct key. To abort a rotation, simply
-//! stop the tool; already-migrated rows remain openable with the new key, un-migrated rows remain
-//! openable with the old key. Rolling back a completed rotation requires running the tool again
-//! with the old and new keys swapped.
+//! Old-key and new-key records can coexist indefinitely: during the rotation window the server
+//! tries `MASTER_KEY_NEXT` first and falls back to `MASTER_KEY` (AES-GCM authentication tells
+//! them apart). To abort, stop the tool. Rolling back a completed rotation means running the tool
+//! again with the old and new keys swapped.
 //!
 //! ## Usage
 //!
@@ -69,7 +68,7 @@
 
 use anyhow::{Context, Result};
 use base64::Engine;
-use octo_crypto::{master_key_from_slice, reseal, MASTER_KEY_LEN, SCHEME_V1};
+use octo_crypto::{master_key_from_slice, MASTER_KEY_LEN};
 use octo_store::Store;
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
